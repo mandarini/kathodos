@@ -23,3 +23,8 @@ export async function loadMarker(): Promise<google.maps.MarkerLibrary> {
   ensureConfigured()
   return importLibrary('marker')
 }
+
+export async function loadElevation(): Promise<google.maps.ElevationLibrary> {
+  ensureConfigured()
+  return importLibrary('elevation')
+}

@@ -147,10 +147,31 @@
   border-radius: 6px;
 }
 
+.form-notes {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.form-note {
+  font-size: 13px;
+  color: var(--text);
+  background: var(--code-bg);
+  padding: 8px 10px;
+  border-radius: 6px;
+  border: 1px solid var(--border);
+}
+
 .route-compare {
   display: flex;
   flex-direction: column;
   gap: 12px;
+}
+
+.elevation-profile-wrap {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
 }
 
 .elevation-profile {
@@ -158,6 +179,37 @@
   height: auto;
   background: var(--code-bg);
   border-radius: 8px;
+  display: block;
+}
+
+.elevation-legend {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 12px;
+  font-size: 11px;
+  color: var(--text);
+}
+
+.elevation-legend li {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.legend-swatch {
+  display: inline-block;
+  width: 12px;
+  height: 3px;
+  border-radius: 2px;
+  border: 1px solid;
+}
+
+.legend-swatch--dashed {
+  border-style: dashed;
+  background: transparent !important;
 }
 
 .route-compare-grid {
@@ -225,6 +277,12 @@
   font-size: 16px;
   font-weight: 600;
   color: var(--text-h);
+}
+
+.route-stats-compare {
+  font-size: 11px;
+  color: var(--text);
+  font-style: italic;
 }
 
 .route-stats-actions {

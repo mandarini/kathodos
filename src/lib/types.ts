@@ -9,6 +9,15 @@ export type RoutePoint = {
 
 export type RouteSource = 'brouter' | 'google'
 
+export type GoogleTravelMode = 'BICYCLE' | 'DRIVE' | 'WALK'
+
+export type ElevationSeries = {
+  label: string
+  elevations: number[]
+  ascentMeters: number
+  descentMeters: number
+}
+
 export type Route = {
   source: RouteSource
   points: RoutePoint[]
@@ -16,6 +25,8 @@ export type Route = {
   durationSeconds: number
   ascentMeters: number
   descentMeters: number
+  googleMode?: GoogleTravelMode
+  comparisonSeries?: ElevationSeries
 }
 
 export type Endpoint = {

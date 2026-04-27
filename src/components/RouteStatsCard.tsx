@@ -1,13 +1,20 @@
 import type { Route } from '../lib/types'
 
-const LABELS: Record<Route['source'], string> = {
-  brouter: 'BRouter (least climb)',
-  google: 'Google (default)',
-}
-
 const COLORS: Record<Route['source'], string> = {
   brouter: '#16a34a',
   google: '#2563eb',
+}
+
+function labelFor(route: Route): string {
+  if (route.source === 'brouter') return 'BRouter (least climb)'
+  switch (route.googleMode) {
+    case 'DRIVE':
+      return 'Google (driving fallback)'
+    case 'WALK':
+      return 'Google (walking fallback)'
+    default:
+      return 'Google (bicycle)'
+  }
 }
 
 function formatDuration(seconds: number): string {
@@ -33,7 +40,7 @@ export function RouteStatsCard({ route, highlight, children }: Props) {
           style={{ background: COLORS[route.source] }}
           aria-hidden
         />
-        <h3>{LABELS[route.source]}</h3>
+        <h3>{labelFor(route)}</h3>
       </div>
       <dl className="route-stats-grid">
         <div>
@@ -43,10 +50,20 @@ export function RouteStatsCard({ route, highlight, children }: Props) {
         <div>
           <dt>Climb (ascent)</dt>
           <dd>{Math.round(route.ascentMeters)} m</dd>
+          {route.comparisonSeries && (
+            <span className="route-stats-compare">
+              {route.comparisonSeries.label}: {Math.round(route.comparisonSeries.ascentMeters)} m
+            </span>
+          )}
         </div>
         <div>
           <dt>Descent</dt>
           <dd>{Math.round(route.descentMeters)} m</dd>
+          {route.comparisonSeries && (
+            <span className="route-stats-compare">
+              {route.comparisonSeries.label}: {Math.round(route.comparisonSeries.descentMeters)} m
+            </span>
+          )}
         </div>
         <div>
           <dt>ETA</dt>

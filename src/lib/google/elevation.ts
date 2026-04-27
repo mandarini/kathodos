@@ -1,14 +1,16 @@
-const ELEVATION_URL = 'https://maps.googleapis.com/maps/api/elevation/json'
+import polyline from '@mapbox/polyline'
+import type { LatLng } from '../types'
+import { loadElevation } from './loader'
 
-const MAX_SAMPLES = 512
+const MAX_PER_REQUEST = 512
 
-type ElevationResponse = {
-  status: string
-  error_message?: string
-  results?: Array<{
-    elevation: number
-    location: { lat: number; lng: number }
-  }>
+let serviceRef: google.maps.ElevationService | null = null
+
+async function getService(): Promise<google.maps.ElevationService> {
+  if (serviceRef) return serviceRef
+  const lib = await loadElevation()
+  serviceRef = new lib.ElevationService()
+  return serviceRef
 }
 
 export type ElevationSample = { lat: number; lng: number; elevation: number }
@@ -16,21 +18,30 @@ export type ElevationSample = { lat: number; lng: number; elevation: number }
 export async function sampleElevations(
   encodedPolyline: string,
   samples: number,
-  apiKey: string,
+  _apiKey?: string,
 ): Promise<ElevationSample[]> {
-  const n = Math.max(2, Math.min(MAX_SAMPLES, samples))
-  const url = `${ELEVATION_URL}?path=enc:${encodeURIComponent(encodedPolyline)}&samples=${n}&key=${apiKey}`
-  const res = await fetch(url)
-  if (!res.ok) {
-    throw new Error(`Elevation request failed: ${res.status} ${res.statusText}`)
-  }
-  const data = (await res.json()) as ElevationResponse
-  if (data.status !== 'OK') {
-    throw new Error(`Elevation API error: ${data.status} ${data.error_message ?? ''}`)
-  }
-  return (data.results ?? []).map((r) => ({
-    lat: r.location.lat,
-    lng: r.location.lng,
+  const service = await getService()
+  const path = polyline.decode(encodedPolyline).map(([lat, lng]) => ({ lat, lng }))
+  const n = Math.max(2, Math.min(MAX_PER_REQUEST, samples))
+  const res = await service.getElevationAlongPath({ path, samples: n })
+  return (res.results ?? []).map((r) => ({
+    lat: r.location?.lat() ?? 0,
+    lng: r.location?.lng() ?? 0,
     elevation: r.elevation,
   }))
+}
+
+export async function sampleElevationsAtLocations(
+  locations: LatLng[],
+  _apiKey?: string,
+): Promise<number[]> {
+  if (locations.length === 0) return []
+  const service = await getService()
+  const out: number[] = []
+  for (let i = 0; i < locations.length; i += MAX_PER_REQUEST) {
+    const chunk = locations.slice(i, i + MAX_PER_REQUEST)
+    const res = await service.getElevationForLocations({ locations: chunk })
+    for (const r of res.results ?? []) out.push(r.elevation)
+  }
+  return out
 }

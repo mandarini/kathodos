@@ -14,21 +14,25 @@ export function haversineMeters(a: LatLng, b: LatLng): number {
   return 2 * EARTH_RADIUS_M * Math.asin(Math.sqrt(h))
 }
 
-function movingAverage(values: number[], window: number): number[] {
-  if (values.length === 0) return []
-  const half = Math.floor(window / 2)
-  const out = new Array<number>(values.length)
-  for (let i = 0; i < values.length; i++) {
-    const lo = Math.max(0, i - half)
-    const hi = Math.min(values.length - 1, i + half)
-    let sum = 0
-    for (let j = lo; j <= hi; j++) sum += values[j]
-    out[i] = sum / (hi - lo + 1)
-  }
-  return out
-}
-
 export type RawElevPoint = LatLng & { elevation: number }
+
+export function computeAscentDescent(
+  elevations: number[],
+  minDeltaMeters: number = 2,
+): { ascentMeters: number; descentMeters: number } {
+  if (elevations.length === 0) return { ascentMeters: 0, descentMeters: 0 }
+  let ascent = 0
+  let descent = 0
+  let last = elevations[0]
+  for (let i = 1; i < elevations.length; i++) {
+    const delta = elevations[i] - last
+    if (Math.abs(delta) < minDeltaMeters) continue
+    if (delta > 0) ascent += delta
+    else descent += -delta
+    last = elevations[i]
+  }
+  return { ascentMeters: ascent, descentMeters: descent }
+}
 
 export type AnalyzedTrack = {
   points: RoutePoint[]
@@ -39,26 +43,20 @@ export type AnalyzedTrack = {
 
 export function analyzeTrack(
   raw: RawElevPoint[],
-  opts: { smoothingWindow?: number; minDeltaMeters?: number } = {},
+  opts: { minDeltaMeters?: number } = {},
 ): AnalyzedTrack {
-  const smoothingWindow = opts.smoothingWindow ?? 5
-  const minDelta = opts.minDeltaMeters ?? 1
+  const minDelta = opts.minDeltaMeters ?? 2
 
   if (raw.length === 0) {
     return { points: [], distanceMeters: 0, ascentMeters: 0, descentMeters: 0 }
   }
-
-  const smoothedElev = movingAverage(
-    raw.map((p) => p.elevation),
-    smoothingWindow,
-  )
 
   let distance = 0
   const points: RoutePoint[] = new Array(raw.length)
   points[0] = {
     lat: raw[0].lat,
     lng: raw[0].lng,
-    elevation: smoothedElev[0],
+    elevation: raw[0].elevation,
     distanceFromStart: 0,
   }
   for (let i = 1; i < raw.length; i++) {
@@ -66,20 +64,20 @@ export function analyzeTrack(
     points[i] = {
       lat: raw[i].lat,
       lng: raw[i].lng,
-      elevation: smoothedElev[i],
+      elevation: raw[i].elevation,
       distanceFromStart: distance,
     }
   }
 
   let ascent = 0
   let descent = 0
-  let lastSignificantElev = smoothedElev[0]
-  for (let i = 1; i < smoothedElev.length; i++) {
-    const delta = smoothedElev[i] - lastSignificantElev
+  let lastSignificantElev = raw[0].elevation
+  for (let i = 1; i < raw.length; i++) {
+    const delta = raw[i].elevation - lastSignificantElev
     if (Math.abs(delta) < minDelta) continue
     if (delta > 0) ascent += delta
     else descent += -delta
-    lastSignificantElev = smoothedElev[i]
+    lastSignificantElev = raw[i].elevation
   }
 
   return { points, distanceMeters: distance, ascentMeters: ascent, descentMeters: descent }

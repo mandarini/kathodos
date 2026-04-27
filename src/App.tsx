@@ -15,6 +15,7 @@ function App() {
   const [end, setEnd] = useState<Endpoint | undefined>()
   const [routes, setRoutes] = useState<Route[]>([])
   const [errors, setErrors] = useState<EngineError[]>([])
+  const [notes, setNotes] = useState<string[]>([])
   const [loading, setLoading] = useState(false)
 
   const swap = () => {
@@ -26,24 +27,41 @@ function App() {
     if (!start || !end) return
     setLoading(true)
     setErrors([])
+    setNotes([])
     setRoutes([])
 
     const [brouterResult, googleResult] = await Promise.allSettled([
-      getBrouterRoute(start.location, end.location),
+      getBrouterRoute(start.location, end.location, {
+        googleElevationApiKey: GOOGLE_MAPS_API_KEY,
+      }),
       getLowestAscentGoogleRoute(start.location, end.location, GOOGLE_MAPS_API_KEY),
     ])
 
     const next: Route[] = []
     const nextErrors: EngineError[] = []
+    const nextNotes: string[] = []
 
     if (brouterResult.status === 'fulfilled') next.push(brouterResult.value)
     else nextErrors.push({ source: 'brouter', message: String(brouterResult.reason) })
 
-    if (googleResult.status === 'fulfilled') next.push(googleResult.value)
-    else nextErrors.push({ source: 'google', message: String(googleResult.reason) })
+    if (googleResult.status === 'fulfilled') {
+      if (googleResult.value) {
+        next.push(googleResult.value)
+        if (googleResult.value.googleMode && googleResult.value.googleMode !== 'BICYCLE') {
+          nextNotes.push(
+            `Google has no bicycle data here — using its ${googleResult.value.googleMode.toLowerCase()} network as a fallback.`,
+          )
+        }
+      } else {
+        nextNotes.push('Google has no route data for this area — showing BRouter only.')
+      }
+    } else {
+      nextErrors.push({ source: 'google', message: String(googleResult.reason) })
+    }
 
     setRoutes(next)
     setErrors(nextErrors)
+    setNotes(nextNotes)
     setLoading(false)
   }
 
@@ -70,6 +88,13 @@ function App() {
               <div key={e.source} className="form-error">
                 <strong>{e.source}:</strong> {e.message}
               </div>
+            ))}
+          </div>
+        )}
+        {notes.length > 0 && (
+          <div className="form-notes">
+            {notes.map((n, i) => (
+              <div key={i} className="form-note">{n}</div>
             ))}
           </div>
         )}
