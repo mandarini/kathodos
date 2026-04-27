@@ -2,6 +2,8 @@
 
 > κάθοδος — *káthodos*, Greek for *descent*.
 
+**Live: <https://kathodos.netlify.app/>**
+
 A bike route planner that picks the path with the **least cumulative climbing**, not the shortest or fastest one. Built because Athens is hilly and bikes don't have gears for spite.
 
 Given a start and a destination, kathodos asks two routing engines for their best bike route and reranks them by ascent:
