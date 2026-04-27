@@ -22,23 +22,32 @@ type BrouterFeatureCollection = {
   }>
 }
 
-export async function getBrouterRoute(
+type BrouterCandidate = {
+  raw: RawElevPoint[]
+  trackLength: number
+  totalTime: number
+  ascentMeters: number
+  descentMeters: number
+  points: Route['points']
+  distanceMeters: number
+  alternativeIdx: number
+}
+
+async function fetchBrouterAlternative(
   start: LatLng,
   end: LatLng,
-  opts: { profile?: string; googleElevationApiKey?: string } = {},
-): Promise<Route> {
-  const profile = opts.profile ?? 'trekking'
+  profile: string,
+  alternativeIdx: number,
+): Promise<BrouterCandidate> {
   const lonlats = `${start.lng},${start.lat}|${end.lng},${end.lat}`
-  const url = `${BROUTER_URL}?lonlats=${lonlats}&profile=${profile}&alternativeidx=0&format=geojson`
-
+  const url = `${BROUTER_URL}?lonlats=${lonlats}&profile=${profile}&alternativeidx=${alternativeIdx}&format=geojson`
   const res = await fetch(url)
   if (!res.ok) {
-    throw new Error(`BRouter request failed: ${res.status} ${res.statusText}`)
+    throw new Error(`BRouter request failed (idx=${alternativeIdx}): ${res.status} ${res.statusText}`)
   }
   const data = (await res.json()) as BrouterFeatureCollection
-
   const feature = data.features[0]
-  if (!feature) throw new Error('BRouter returned no route feature')
+  if (!feature) throw new Error(`BRouter returned no route feature (idx=${alternativeIdx})`)
 
   const trackLength = Number(feature.properties['track-length'] ?? '0')
   const totalTime = Number(feature.properties['total-time'] ?? '0')
@@ -46,21 +55,58 @@ export async function getBrouterRoute(
   const raw: RawElevPoint[] = feature.geometry.coordinates.map(
     ([lng, lat, elevation]) => ({ lat, lng, elevation: elevation ?? 0 }),
   )
-
   const analyzed = analyzeTrack(raw)
+
+  return {
+    raw,
+    trackLength,
+    totalTime,
+    ascentMeters: analyzed.ascentMeters,
+    descentMeters: analyzed.descentMeters,
+    points: analyzed.points,
+    distanceMeters: trackLength || analyzed.distanceMeters,
+    alternativeIdx,
+  }
+}
+
+export async function getBrouterRoute(
+  start: LatLng,
+  end: LatLng,
+  opts: { profile?: string; googleElevationApiKey?: string } = {},
+): Promise<Route> {
+  const profile = opts.profile ?? 'trekking'
+
+  const settled = await Promise.allSettled(
+    [0, 1, 2, 3].map((idx) => fetchBrouterAlternative(start, end, profile, idx)),
+  )
+  const candidates = settled
+    .filter((s): s is PromiseFulfilledResult<BrouterCandidate> => s.status === 'fulfilled')
+    .map((s) => s.value)
+
+  if (candidates.length === 0) {
+    const firstErr = settled.find((s) => s.status === 'rejected') as
+      | PromiseRejectedResult
+      | undefined
+    throw new Error(
+      firstErr ? String(firstErr.reason) : 'BRouter returned no usable alternatives',
+    )
+  }
+
+  candidates.sort((a, b) => a.ascentMeters - b.ascentMeters)
+  const best = candidates[0]
 
   const route: Route = {
     source: 'brouter',
-    points: analyzed.points,
-    distanceMeters: trackLength || analyzed.distanceMeters,
-    durationSeconds: totalTime,
-    ascentMeters: analyzed.ascentMeters,
-    descentMeters: analyzed.descentMeters,
+    points: best.points,
+    distanceMeters: best.distanceMeters,
+    durationSeconds: best.totalTime,
+    ascentMeters: best.ascentMeters,
+    descentMeters: best.descentMeters,
   }
 
   if (opts.googleElevationApiKey) {
     const googleElevations = await sampleElevationsAtLocations(
-      raw.map((p) => ({ lat: p.lat, lng: p.lng })),
+      best.raw.map((p) => ({ lat: p.lat, lng: p.lng })),
       opts.googleElevationApiKey,
     )
     const totals = computeAscentDescent(googleElevations)
