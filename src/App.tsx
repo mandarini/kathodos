@@ -1,121 +1,91 @@
 import { useState } from 'react'
-import reactLogo from './assets/react.svg'
-import viteLogo from './assets/vite.svg'
-import heroImg from './assets/hero.png'
+import { RoutePlannerForm } from './components/RoutePlannerForm'
+import { MapView } from './components/MapView'
+import { RouteCompare } from './components/RouteCompare'
+import { getBrouterRoute } from './lib/brouter/client'
+import { getLowestAscentGoogleRoute } from './lib/google/routes'
+import { GOOGLE_MAPS_API_KEY } from './config'
+import type { Endpoint, Route } from './lib/types'
 import './App.css'
 
+type EngineError = { source: Route['source']; message: string }
+
 function App() {
-  const [count, setCount] = useState(0)
+  const [start, setStart] = useState<Endpoint | undefined>()
+  const [end, setEnd] = useState<Endpoint | undefined>()
+  const [routes, setRoutes] = useState<Route[]>([])
+  const [errors, setErrors] = useState<EngineError[]>([])
+  const [loading, setLoading] = useState(false)
+
+  const swap = () => {
+    setStart(end)
+    setEnd(start)
+  }
+
+  const findRoute = async () => {
+    if (!start || !end) return
+    setLoading(true)
+    setErrors([])
+    setRoutes([])
+
+    const [brouterResult, googleResult] = await Promise.allSettled([
+      getBrouterRoute(start.location, end.location),
+      getLowestAscentGoogleRoute(start.location, end.location, GOOGLE_MAPS_API_KEY),
+    ])
+
+    const next: Route[] = []
+    const nextErrors: EngineError[] = []
+
+    if (brouterResult.status === 'fulfilled') next.push(brouterResult.value)
+    else nextErrors.push({ source: 'brouter', message: String(brouterResult.reason) })
+
+    if (googleResult.status === 'fulfilled') next.push(googleResult.value)
+    else nextErrors.push({ source: 'google', message: String(googleResult.reason) })
+
+    setRoutes(next)
+    setErrors(nextErrors)
+    setLoading(false)
+  }
 
   return (
-    <>
-      <section id="center">
-        <div className="hero">
-          <img src={heroImg} className="base" width="170" height="179" alt="" />
-          <img src={reactLogo} className="framework" alt="React logo" />
-          <img src={viteLogo} className="vite" alt="Vite logo" />
-        </div>
-        <div>
-          <h1>Get started</h1>
-          <p>
-            Edit <code>src/App.tsx</code> and save to test <code>HMR</code>
-          </p>
-        </div>
-        <button
-          type="button"
-          className="counter"
-          onClick={() => setCount((count) => count + 1)}
-        >
-          Count is {count}
-        </button>
-      </section>
+    <div className="app">
+      <header className="app-header">
+        <h1>kathodos</h1>
+        <p>Bike routes that go around hills, not over them.</p>
+      </header>
 
-      <div className="ticks"></div>
+      <aside className="app-sidebar">
+        <RoutePlannerForm
+          start={start}
+          end={end}
+          loading={loading}
+          onChangeStart={setStart}
+          onChangeEnd={setEnd}
+          onSwap={swap}
+          onSubmit={findRoute}
+        />
+        {errors.length > 0 && (
+          <div className="form-errors">
+            {errors.map((e) => (
+              <div key={e.source} className="form-error">
+                <strong>{e.source}:</strong> {e.message}
+              </div>
+            ))}
+          </div>
+        )}
+        {routes.length > 0 && start && end && (
+          <RouteCompare routes={routes} start={start} end={end} />
+        )}
+      </aside>
 
-      <section id="next-steps">
-        <div id="docs">
-          <svg className="icon" role="presentation" aria-hidden="true">
-            <use href="/icons.svg#documentation-icon"></use>
-          </svg>
-          <h2>Documentation</h2>
-          <p>Your questions, answered</p>
-          <ul>
-            <li>
-              <a href="https://vite.dev/" target="_blank">
-                <img className="logo" src={viteLogo} alt="" />
-                Explore Vite
-              </a>
-            </li>
-            <li>
-              <a href="https://react.dev/" target="_blank">
-                <img className="button-icon" src={reactLogo} alt="" />
-                Learn more
-              </a>
-            </li>
-          </ul>
-        </div>
-        <div id="social">
-          <svg className="icon" role="presentation" aria-hidden="true">
-            <use href="/icons.svg#social-icon"></use>
-          </svg>
-          <h2>Connect with us</h2>
-          <p>Join the Vite community</p>
-          <ul>
-            <li>
-              <a href="https://github.com/vitejs/vite" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#github-icon"></use>
-                </svg>
-                GitHub
-              </a>
-            </li>
-            <li>
-              <a href="https://chat.vite.dev/" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#discord-icon"></use>
-                </svg>
-                Discord
-              </a>
-            </li>
-            <li>
-              <a href="https://x.com/vite_js" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#x-icon"></use>
-                </svg>
-                X.com
-              </a>
-            </li>
-            <li>
-              <a href="https://bsky.app/profile/vite.dev" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#bluesky-icon"></use>
-                </svg>
-                Bluesky
-              </a>
-            </li>
-          </ul>
-        </div>
-      </section>
-
-      <div className="ticks"></div>
-      <section id="spacer"></section>
-    </>
+      <main className="app-map">
+        <MapView
+          start={start?.location}
+          end={end?.location}
+          routes={routes}
+        />
+      </main>
+    </div>
   )
 }
 
