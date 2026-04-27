@@ -70,6 +70,21 @@ function App() {
       <header className="app-header">
         <h1>kathodos</h1>
         <p>Bike routes that go around hills, not over them.</p>
+        <a
+          className="app-header-repo"
+          href="https://github.com/mandarini/kathodos"
+          target="_blank"
+          rel="noreferrer noopener"
+          aria-label="GitHub repository"
+        >
+          <svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true">
+            <path
+              fill="currentColor"
+              d="M12 .5a11.5 11.5 0 0 0-3.64 22.42c.58.1.79-.25.79-.56v-2c-3.2.7-3.88-1.36-3.88-1.36-.52-1.34-1.27-1.7-1.27-1.7-1.04-.71.08-.7.08-.7 1.15.08 1.76 1.18 1.76 1.18 1.02 1.75 2.68 1.25 3.34.95.1-.74.4-1.25.73-1.54-2.55-.29-5.24-1.28-5.24-5.71 0-1.26.45-2.3 1.18-3.11-.12-.29-.51-1.46.11-3.04 0 0 .96-.31 3.16 1.19a10.95 10.95 0 0 1 5.76 0c2.2-1.5 3.16-1.19 3.16-1.19.62 1.58.23 2.75.11 3.04.74.81 1.18 1.85 1.18 3.11 0 4.44-2.7 5.42-5.27 5.7.41.36.78 1.05.78 2.13v3.16c0 .31.21.67.8.55A11.5 11.5 0 0 0 12 .5Z"
+            />
+          </svg>
+          <span>GitHub</span>
+        </a>
       </header>
 
       <aside className="app-sidebar">

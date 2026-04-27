@@ -37,6 +37,24 @@
   font-size: 14px;
 }
 
+.app-header-repo {
+  margin-left: auto;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 13px;
+  color: var(--text);
+  text-decoration: none;
+  padding: 6px 10px;
+  border-radius: 6px;
+  border: 1px solid var(--border);
+}
+
+.app-header-repo:hover {
+  color: var(--text-h);
+  border-color: var(--accent-border);
+}
+
 .app-sidebar {
   grid-area: sidebar;
   border-right: 1px solid var(--border);

@@ -44,7 +44,7 @@ No backend. Everything runs in the browser.
    - **Geocoding API**
 3. APIs & Services → Credentials → Create credentials → API key.
 4. Restrict the key (recommended):
-   - **Application restrictions** → HTTP referrers → add `http://localhost:5173/*` and any production domain.
+   - **Application restrictions** → HTTP referrers → add `http://localhost:5421/*` and any production domain.
    - **API restrictions** → restrict to the five APIs above.
 
 ### 2. Configure the app
@@ -61,7 +61,7 @@ pnpm install
 pnpm dev
 ```
 
-Then open <http://localhost:5173>.
+Then open <http://localhost:5421>.
 
 ## Scripts
 
