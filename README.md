@@ -109,4 +109,4 @@ Issues and PRs welcome. See [CONTRIBUTING.md](./CONTRIBUTING.md).
 
 ## License
 
-[MIT](./LICENSE) © Katerina Skroumpelou
+[MIT](./LICENSE) © mandarini
