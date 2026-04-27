@@ -98,8 +98,8 @@ function App() {
             ))}
           </div>
         )}
-        {routes.length > 0 && start && end && (
-          <RouteCompare routes={routes} start={start} end={end} />
+        {routes.length > 0 && (
+          <RouteCompare routes={routes} />
         )}
       </aside>
 

@@ -290,9 +290,10 @@
   gap: 8px;
 }
 
-.route-compare-footer {
-  display: flex;
-  justify-content: flex-end;
+.route-compare-hint {
+  font-size: 12px;
+  color: var(--text);
+  margin: 0;
 }
 
 @media (max-width: 800px) {

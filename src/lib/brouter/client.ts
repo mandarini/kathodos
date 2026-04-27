@@ -107,7 +107,6 @@ export async function getBrouterRoute(
   if (opts.googleElevationApiKey) {
     const googleElevations = await sampleElevationsAtLocations(
       best.raw.map((p) => ({ lat: p.lat, lng: p.lng })),
-      opts.googleElevationApiKey,
     )
     const totals = computeAscentDescent(googleElevations)
     route.comparisonSeries = {

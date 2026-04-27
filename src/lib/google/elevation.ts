@@ -18,7 +18,6 @@ export type ElevationSample = { lat: number; lng: number; elevation: number }
 export async function sampleElevations(
   encodedPolyline: string,
   samples: number,
-  _apiKey?: string,
 ): Promise<ElevationSample[]> {
   const service = await getService()
   const path = polyline.decode(encodedPolyline).map(([lat, lng]) => ({ lat, lng }))
@@ -33,7 +32,6 @@ export async function sampleElevations(
 
 export async function sampleElevationsAtLocations(
   locations: LatLng[],
-  _apiKey?: string,
 ): Promise<number[]> {
   if (locations.length === 0) return []
   const service = await getService()

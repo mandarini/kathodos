@@ -1,26 +1,24 @@
-import type { Endpoint, Route } from '../lib/types'
+import type { Route } from '../lib/types'
 import { RouteStatsCard } from './RouteStatsCard'
 import { ElevationProfile } from './ElevationProfile'
 import { downloadGpx } from '../lib/gpx/export'
-import { googleMapsBicycleDirections } from '../lib/google/directions-link'
 
 type Props = {
   routes: Route[]
-  start: Endpoint
-  end: Endpoint
 }
 
-export function RouteCompare({ routes, start, end }: Props) {
+export function RouteCompare({ routes }: Props) {
   if (routes.length === 0) return null
 
   const sorted = [...routes].sort((a, b) => a.ascentMeters - b.ascentMeters)
   const lowestSource = sorted[0]?.source
 
-  const gmapsUrl = googleMapsBicycleDirections(start.location, end.location)
-
   return (
     <section className="route-compare">
       <ElevationProfile routes={routes} />
+      <p className="route-compare-hint">
+        Download a GPX and import it into Strava, Komoot, RideWithGPS, Garmin Connect, or any GPX-aware app.
+      </p>
       <div className="route-compare-grid">
         {routes.map((route) => (
           <RouteStatsCard
@@ -39,16 +37,6 @@ export function RouteCompare({ routes, start, end }: Props) {
             </button>
           </RouteStatsCard>
         ))}
-      </div>
-      <div className="route-compare-footer">
-        <a
-          className="link-button"
-          href={gmapsUrl}
-          target="_blank"
-          rel="noreferrer noopener"
-        >
-          Open in Google Maps ↗
-        </a>
       </div>
     </section>
   )

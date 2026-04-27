@@ -87,7 +87,7 @@ export async function getLowestAscentGoogleRoute(
         20,
         Math.min(512, Math.ceil(cand.distanceMeters / 20)),
       )
-      const samples = await sampleElevations(cand.encodedPolyline, samplesNeeded, apiKey)
+      const samples = await sampleElevations(cand.encodedPolyline, samplesNeeded)
       const track = analyzeTrack(samples)
       return { cand, track }
     }),

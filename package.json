@@ -1,8 +1,20 @@
 {
   "name": "kathodos",
   "private": true,
-  "version": "0.0.0",
+  "version": "0.1.0",
+  "description": "Bike route planner that picks the path with the least cumulative climbing. Compares BRouter and Google Routes side by side.",
   "type": "module",
+  "license": "MIT",
+  "author": "Katerina Skroumpelou",
+  "keywords": [
+    "bike",
+    "cycling",
+    "routing",
+    "elevation",
+    "brouter",
+    "google-maps",
+    "athens"
+  ],
   "scripts": {
     "dev": "vite",
     "build": "tsc -b && vite build",

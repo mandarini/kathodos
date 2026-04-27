@@ -58,6 +58,9 @@ export function ElevationProfile({ routes, width = 720, height = 220 }: Props) {
   const xTicks = [0, dims.maxDist / 2, dims.maxDist]
 
   const lines: ChartLine[] = useMemo(() => {
+    const xs = (m: number) => (dims.maxDist === 0 ? 0 : (m / dims.maxDist) * innerW)
+    const ys = (e: number) =>
+      innerH - ((e - dims.minElev) / (dims.maxElev - dims.minElev)) * innerH
     const out: ChartLine[] = []
     for (const route of routes) {
       const color = COLORS[route.source]
@@ -71,7 +74,7 @@ export function ElevationProfile({ routes, width = 720, height = 220 }: Props) {
         d: route.points
           .map((p, i) => {
             const cmd = i === 0 ? 'M' : 'L'
-            return `${cmd}${xScale(p.distanceFromStart).toFixed(1)},${yScale(p.elevation).toFixed(1)}`
+            return `${cmd}${xs(p.distanceFromStart).toFixed(1)},${ys(p.elevation).toFixed(1)}`
           })
           .join(' '),
       })
@@ -86,14 +89,14 @@ export function ElevationProfile({ routes, width = 720, height = 220 }: Props) {
             .map((p, i) => {
               const cmd = i === 0 ? 'M' : 'L'
               const e = series.elevations[i] ?? p.elevation
-              return `${cmd}${xScale(p.distanceFromStart).toFixed(1)},${yScale(e).toFixed(1)}`
+              return `${cmd}${xs(p.distanceFromStart).toFixed(1)},${ys(e).toFixed(1)}`
             })
             .join(' '),
         })
       }
     }
     return out
-  }, [routes, dims])
+  }, [routes, dims, innerW, innerH])
 
   if (routes.length === 0) return null
 
