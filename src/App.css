@@ -26,6 +26,12 @@
   gap: 16px;
 }
 
+.app-header-logo {
+  display: block;
+  border-radius: 8px;
+  flex-shrink: 0;
+}
+
 .app-header h1 {
   margin: 0;
   font-size: 24px;

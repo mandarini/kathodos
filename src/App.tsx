@@ -68,6 +68,7 @@ function App() {
   return (
     <div className="app">
       <header className="app-header">
+        <img className="app-header-logo" src="/logo.png" alt="" width="36" height="36" />
         <h1>kathodos</h1>
         <p>Bike routes that go around hills, not over them.</p>
         <a
